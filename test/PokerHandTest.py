@@ -5,18 +5,15 @@ Created on Apr 16, 2014
 '''
 import unittest
 import random
-from PokerCard import PokerCard
 import PokerHand as Hand
-from PokerHand import PokerHand
+from helper.poker import get_PokerHand_from_list
 
 class PokerHandTest(unittest.TestCase):
-            
+    
     def testPokerHand5CardsGeneric(self):
         for _count in xrange(1000):
-            cards1 = [PokerCard(random.randint(0,51)) for _ in range(5)]
-            cards2 = [PokerCard(random.randint(0,51)) for _ in range(5)]
-            hand1 = PokerHand(cards1)
-            hand2 = PokerHand(cards2)
+            hand1 = get_PokerHand_from_list([random.randint(0,51) for _ in range(5)])
+            hand2 = get_PokerHand_from_list([random.randint(0,51) for _ in range(5)])            
             if hand1 < hand2:
                 self.assertLessEqual(hand1.hand, hand2.hand)
             elif hand1 > hand2:
@@ -26,10 +23,8 @@ class PokerHandTest(unittest.TestCase):
     
     def testPokerHand7CardsGeneric(self):
         for _count in xrange(1000):
-            cards1 = [PokerCard(random.randint(0,51)) for _ in range(7)]
-            cards2 = [PokerCard(random.randint(0,51)) for _ in range(7)]
-            hand1 = PokerHand(cards1)
-            hand2 = PokerHand(cards2)
+            hand1 = get_PokerHand_from_list([random.randint(0,51) for _ in range(7)])
+            hand2 = get_PokerHand_from_list([random.randint(0,51) for _ in range(7)])
             if hand1 < hand2:
                 self.assertLessEqual(hand1.hand, hand2.hand)
             elif hand1 > hand2:
@@ -37,44 +32,54 @@ class PokerHandTest(unittest.TestCase):
             elif hand1 == hand2:
                 self.assertEqual(hand1.hand, hand2.hand)    
                 
-    def testPokerHandHighCard(self):
-        cards1 = [PokerCard(c) for c in [1, 9, 18, 25, 35]]
-        cards2 = [PokerCard(c) for c in [2, 10, 19, 26, 34]]
-        hand1 = PokerHand(cards1)
-        hand2 = PokerHand(cards2)
+    def testPokerHandHighCard(self):        
+        hand1 = get_PokerHand_from_list([1, 9, 18, 25, 35])
+        hand2 = get_PokerHand_from_list([2, 10, 19, 26, 34])
         self.assertEqual(hand1.hand, Hand.HIGH_CARD)
         self.assertEqual(hand2.hand, Hand.HIGH_CARD)        
         self.assertEqual(hand1, hand2)
-        
-        cards1 = [PokerCard(c) for c in [1, 9, 18, 25, 35]]
-        cards2 = [PokerCard(c) for c in [10, 19, 26, 34, 50]]
-        hand1 = PokerHand(cards1)
-        hand2 = PokerHand(cards2)        
+                
+        hand2 = get_PokerHand_from_list([10, 19, 26, 34, 50])    
         self.assertEqual(hand1.hand, Hand.HIGH_CARD)
         self.assertEqual(hand2.hand, Hand.HIGH_CARD)
         self.assertGreater(hand1, hand2)
         
-    def testPokerHandOnePair(self):
-        pass
+    def testPokerHandOnePair(self):        
+        hand1 = get_PokerHand_from_list([1, 2, 9, 18, 25, 40])
+        self.assertEqual(hand1.hand, Hand.ONE_PAIR)
     
     def testPokerHandTwoPair(self):
-        pass
+        hand1 = get_PokerHand_from_list([1, 2, 9, 10, 18, 25])
+        self.assertEqual(hand1.hand, Hand.TWO_PAIR)
     
     def testPokerHandStraight(self):
-        pass
+        hand1 = get_PokerHand_from_list([1, 5, 9, 14, 18])
+        self.assertEqual(hand1.hand, Hand.STRAIGHT)
+        
+        hand1 = get_PokerHand_from_list([5, 9, 14, 18, 20])
+        self.assertEqual(hand1.hand, Hand.STRAIGHT)
+        
+        hand1 = get_PokerHand_from_list([1, 50, 47, 43, 36])
+        self.assertEqual(hand1.hand, Hand.STRAIGHT)
+        
+        hand1 = get_PokerHand_from_list([1, 50, 47, 48, 43, 36])
+        self.assertEqual(hand1.hand, Hand.STRAIGHT)
     
     def testPokerHandFlush(self):
-        pass
+        hand1 = get_PokerHand_from_list([4, 8, 12, 15, 20, 28])
+        self.assertEqual(hand1.hand, Hand.FLUSH)
     
     def testPokerHandFullHouse(self):
-        pass
+        hand1 = get_PokerHand_from_list([4, 5, 6, 19, 18, 30, 38])
+        self.assertEqual(hand1.hand, Hand.FULL_HOUSE)
 
     def testPokerHandFourOfAKind(self):
-        pass
+        hand1 = get_PokerHand_from_list([4, 5, 6, 7, 19, 18, 30])
+        self.assertEqual(hand1.hand, Hand.FOUR_OF_A_KIND)
 
-    def testPokerHandRoyalFlush(self):
-        pass
+    def testPokerHandStraightFlush(self):
+        hand1 = get_PokerHand_from_list([4, 8, 12, 16, 20, 24])
+        self.assertEqual(hand1.hand, Hand.STRAIGHT_FLUSH)
     
-if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'Test.testName']
+if __name__ == "__main__":    
     unittest.main()

@@ -4,7 +4,7 @@ Created on Apr 15, 2014
 @author: leen
 '''
 import copy
-#from helper.utils import get_card_value
+from helper.utils import count_key_in_dict
 
 HIGH_CARD = 0x01
 ONE_PAIR = 0x02
@@ -16,12 +16,6 @@ FULL_HOUSE = 0x07
 FOUR_OF_A_KIND = 0x08
 STRAIGHT_FLUSH = 0x09
 
-def count_key(my_dict, key):
-    if key in my_dict:
-        my_dict[key] += 1
-    else:
-        my_dict[key] = 1
-
 class PokerHand():
     """get a list of cards, return some values in poker
         number of cards should be <=7"""
@@ -29,7 +23,7 @@ class PokerHand():
         if not cards:
             raise Exception("Null poker hand")
         if len(cards) > 7:
-            raise Exception("This implementation is not support a have have more than 7 cards")        
+            raise Exception("This implementation does not support a hand which have more than 7 cards")        
         self._cards = sorted(cards)
         self.hand = HIGH_CARD
         self.mean_cards = []
@@ -40,7 +34,7 @@ class PokerHand():
         self._calculate_hand_and_count_suit_kind()
         self._get_mean_cards_and_correct_hand_type()
         
-    def _calculate_hand_and_count_suit_kind(self):
+    def _calculate_hand_and_count_suit_kind(self):        
         kind_list = {}
         suit_list = {}
         cards = self._cards
@@ -48,23 +42,23 @@ class PokerHand():
         seq = 1
         has_pair = False
         has_3ofakind = False
-        #has_low_straight = False
+        """if ace is in the our hand, it must be at highest position"""
+        has_ace = (cards[-1].kind == 14)
         last_kind = cards[0].kind        
         _index = 0
         length = len(cards)
         while _index < length:
             _card = cards[_index]
             kind, suit = _card.kind, _card.suit
-            count_key(kind_list, kind)
-            count_key(suit_list, suit)            
-            #print last_kind, kind_list[last_kind], hand
+            count_key_in_dict(kind_list, kind)
+            count_key_in_dict(suit_list, suit)            
             if (last_kind != kind) or (_index == length-1):                
                 if (kind_list[last_kind] == 2):
                     """
                     if we have a pair, we may have ONE PAIR
                     or TWO PAIR or FULL HOUSE
                     """
-                    hand = ONE_PAIR
+                    hand = max(hand, ONE_PAIR)
                     if has_3ofakind:
                         hand = max(hand, FULL_HOUSE)
                     else:
@@ -88,8 +82,11 @@ class PokerHand():
                     """if we have a sequence"""
                     seq+=1
                     if seq >= 5:
-                        hand = max(hand, STRAIGHT)                        
-                else:
+                        hand = max(hand, STRAIGHT)
+                    if seq == 4:
+                        if kind == 5 and has_ace:
+                            hand = max(hand, STRAIGHT)                        
+                elif (kind - last_kind > 1):
                     seq = 1
                 last_kind = kind
             _index+=1        
@@ -103,17 +100,22 @@ class PokerHand():
         mean_cards = []
         kind_list = self._kind_list
         suit_list = self._suit_list
-        """mean cards number are <= 5"""        
+        """mean cards quantity are <= 5"""        
         remaining_cards = min(5, len(cards))
         
+        def add_to_mean_cards(card_list):            
+            mean_cards.extend(card_list)
+            remaining = remaining_cards - len(card_list)            
+            return remaining
+                    
         if hand == HIGH_CARD:
             """get highest cards in value"""
-            for _index in range(len(cards)-1, -1, -1):
-                mean_cards.append(cards[_index])
-                remaining_cards-=1
+            for _index in range(len(cards)-1, -1, -1):                
+                remaining_cards = add_to_mean_cards([cards[_index],])
                 if remaining_cards == 0:
                     break
-        elif hand == ONE_PAIR:
+                
+        if hand == ONE_PAIR:
             """get highest pair, then highest cards"""
             remaining_pairs = 1
             _index = len(cards) - 1
@@ -123,22 +125,19 @@ class PokerHand():
                     if remaining_cards > 2:
                         """we have to leave available slots for a pair"""
                         if kind_list[kind] == 1:
-                            mean_cards.append(cards[_index])
-                            remaining_cards -= 1
+                            remaining_cards = add_to_mean_cards([cards[_index], ])
                     if kind_list[kind] == 2:
                         """we found highest pair, add them to our mean cards"""
-                        mean_cards.append(cards[_index])
-                        mean_cards.append(cards[_index-1])
+                        remaining_cards = add_to_mean_cards([cards[_index], cards[_index-1], ])
                         _index -= 2
-                        remaining_cards-=2
-                        remaining_pairs-=1
+                        remaining_pairs -= 1
                         continue
                 else:
                     """add remaining cards from high to low"""
-                    mean_cards.append(cards[_index])
-                    remaining_cards -= 1
+                    remaining_cards = add_to_mean_cards([cards[_index], ])
                 _index -= 1
-        elif hand == TWO_PAIR:
+        
+        if hand == TWO_PAIR:
             remaining_pairs = 2
             _index = len(cards) - 1
             while remaining_cards > 0 and _index>=0:
@@ -146,20 +145,17 @@ class PokerHand():
                 if remaining_pairs:
                     if remaining_cards > remaining_pairs*2:
                         if kind_list[kind] == 1:
-                            mean_cards.append(cards[_index])
-                            remaining_cards -= 1
+                            remaining_cards = add_to_mean_cards([cards[_index], ])
                     if kind_list[kind] == 2:
-                        mean_cards.append(cards[_index])
-                        mean_cards.append(cards[_index-1])
+                        remaining_cards = add_to_mean_cards([cards[_index], cards[_index-1], ])
                         _index -= 2
-                        remaining_cards-=2
-                        remaining_pairs-=1
+                        remaining_pairs -= 1
                         continue
                 else:
-                    mean_cards.append(cards[_index])
-                    remaining_cards -= 1
+                    remaining_cards = add_to_mean_cards([cards[_index], ])
                 _index -= 1
-        elif hand == THREE_OF_A_KIND:
+                
+        if hand == THREE_OF_A_KIND:
             remaining_three = 1
             _index = len(cards) - 1
             while remaining_cards > 0 and _index>=0:
@@ -167,21 +163,18 @@ class PokerHand():
                 if remaining_three:
                     if remaining_cards > 3:
                         if kind_list[kind] == 1:
-                            mean_cards.append(cards[_index])
-                            remaining_cards -= 1
+                            remaining_cards = add_to_mean_cards([cards[_index], ])
                     if kind_list[kind] == 3:
-                        mean_cards.append(cards[_index])
-                        mean_cards.append(cards[_index-1])
-                        mean_cards.append(cards[_index-2])
+                        _appending_cards = [cards[_index-i] for i in range(0,3)]
+                        remaining_cards = add_to_mean_cards(_appending_cards)
                         _index -= 3
-                        remaining_cards-=3
                         remaining_three-=1
                         continue
                 else:
-                    mean_cards.append(cards[_index])
-                    remaining_cards -= 1
+                    remaining_cards = add_to_mean_cards([cards[_index], ])
                 _index -= 1
-        elif hand == FOUR_OF_A_KIND:
+                
+        if hand == FOUR_OF_A_KIND:
             remaining_four = 1
             _index = len(cards) - 1
             while remaining_cards > 0 and _index>=0:
@@ -190,22 +183,18 @@ class PokerHand():
                 if remaining_four:
                     if remaining_cards > 4:
                         if kind_list[kind] < 4:
-                            mean_cards.append(cards[_index])
-                            remaining_cards -= 1
+                            remaining_cards = add_to_mean_cards([cards[_index], ])
                     if kind_list[kind] >= 4:
-                        mean_cards.append(cards[_index])
-                        mean_cards.append(cards[_index-1])
-                        mean_cards.append(cards[_index-2])
-                        mean_cards.append(cards[_index-3])
+                        _appending_cards = [cards[_index-i] for i in range(0, 4)]
+                        remaining_cards = add_to_mean_cards(_appending_cards)
                         _index -= 4
-                        remaining_cards-=4
                         remaining_four-=1
                         continue
                 else:
-                    mean_cards.append(cards[_index])
-                    remaining_cards -= 1
+                    remaining_cards = add_to_mean_cards([cards[_index], ])
                 _index -= 1
-        elif hand == FULL_HOUSE:
+                
+        if hand == FULL_HOUSE:
             remaining_three = 1
             remaining_pair = 1
             _index = len(cards) - 1
@@ -214,43 +203,35 @@ class PokerHand():
                 kind = cards[_index].kind
                 if remaining_three:
                     if kind_list[kind] == 3:
-                        mean_cards.append(cards[_index])
-                        mean_cards.append(cards[_index-1])
-                        mean_cards.append(cards[_index-2])
+                        _appending_cards = [cards[_index-i] for i in range(0,3)]
+                        remaining_cards = add_to_mean_cards(_appending_cards)
                         _index-=3
-                        remaining_cards-=3
                         remaining_three-=1
                         continue
                     elif kind_list[kind] == 2:
                         if remaining_pair:
-                            mean_cards.append(cards[_index])
-                            mean_cards.append(cards[_index-1])
+                            remaining_cards = add_to_mean_cards([cards[_index], cards[_index-1]])                            
                             _index-=2
-                            remaining_cards-=2
                             remaining_pair-=1
                             continue
                 else:
                     if remaining_pair:
                         if kind_list[kind] >=2:
-                            mean_cards.append(cards[_index])
-                            mean_cards.append(cards[_index-1])
+                            remaining_cards = add_to_mean_cards([cards[_index], cards[_index-1]])
                             _index-=2
-                            remaining_cards-=2
                             remaining_pair-=1
                             continue
                 _index -= 1
-        #was_straight = (hand == STRAIGHT)
-        #flush_suit = None
-        may_flush = False                        
+        
+        have_flush = False
         for suit in suit_list.keys():
             if suit_list[suit] >= 5:
-                may_flush = True
-                if hand < FLUSH:
-                    hand = FLUSH
+                have_flush = True 
+                hand = max(hand, FLUSH)
                     #mean_cards = []
                 #flush_suit = suit
-        if may_flush:
-            """high chance of straight flush here"""
+        if have_flush:
+            """straight flush detection"""
             flush_cards = []
             for _index in range(len(cards)):
                 suit = cards[_index].suit
@@ -263,7 +244,7 @@ class PokerHand():
                 kind = flush_cards[_index].kind
                 if last_kind - kind == 1:
                     seq +=1
-                else:
+                elif last_kind - kind > 1:
                     seq = 1
                 if seq == 5:
                     hand = STRAIGHT_FLUSH
@@ -273,6 +254,7 @@ class PokerHand():
                     break
                 if seq == 4:
                     if kind == 2 and has_ace_in_flush:
+                        """Case: A 2 3 4 5"""
                         hand = STRAIGHT_FLUSH
                         mean_cards = []
                         mean_cards.append(flush_cards[-1])
@@ -280,6 +262,7 @@ class PokerHand():
                             mean_cards.insert(0,flush_cards[k])
                         break
                 last_kind = kind
+                
         if hand == STRAIGHT:
             mean_cards = []
             seq = 1
@@ -303,8 +286,9 @@ class PokerHand():
                         k+=1
                         prev_kind = kind2
                     break
-                last_kind = kind                
-        elif hand == FLUSH:
+                last_kind = kind
+                                
+        if hand == FLUSH:
             mean_cards = []
             remaining_cards = 5
             for _index in range(len(cards)-1,-1,-1):

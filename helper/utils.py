@@ -3,8 +3,6 @@ Created on Apr 15, 2014
 
 @author: leen
 '''
-import copy
-
 def get_card_value(value):
     number_value = (value / 4) + 1
     if number_value < 2:
@@ -47,3 +45,9 @@ def is_13_unique_cards(cards):
             break
     return correct
 
+def count_key_in_dict(my_dict, key):
+    if key in my_dict:
+        my_dict[key] += 1
+    else:
+        my_dict[key] = 1
+    
