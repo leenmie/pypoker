@@ -5,8 +5,8 @@ Created on Apr 16, 2014
 '''
 import unittest
 import random
-import PokerHand as Hand
-from helper.poker import get_PokerHand_from_list
+import pypoker.PokerHand as Hand
+from pypoker.helper.poker import get_PokerHand_from_list
 
 class PokerHandTest(unittest.TestCase):
     
