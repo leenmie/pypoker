@@ -11,9 +11,13 @@ from pypoker.helper.poker import get_PokerHand_from_list
 class PokerHandTest(unittest.TestCase):
     
     def testPokerHand5CardsGeneric(self):
-        for _count in xrange(1000):
+        for _count in xrange(10000):
             hand1 = get_PokerHand_from_list([random.randint(0,51) for _ in range(5)])
-            hand2 = get_PokerHand_from_list([random.randint(0,51) for _ in range(5)])            
+            hand2 = get_PokerHand_from_list([random.randint(0,51) for _ in range(5)])
+            
+            self.assertTrue(len(hand1.mean_cards)==5)     
+            self.assertTrue(len(hand2.mean_cards)==5)            
+              
             if hand1 < hand2:
                 self.assertLessEqual(hand1.hand, hand2.hand)
             elif hand1 > hand2:
@@ -22,9 +26,11 @@ class PokerHandTest(unittest.TestCase):
                 self.assertEqual(hand1.hand, hand2.hand)
     
     def testPokerHand7CardsGeneric(self):
-        for _count in xrange(1000):
+        for _count in xrange(10000):
             hand1 = get_PokerHand_from_list([random.randint(0,51) for _ in range(7)])
             hand2 = get_PokerHand_from_list([random.randint(0,51) for _ in range(7)])
+            self.assertTrue(len(hand1.mean_cards)==5)     
+            self.assertTrue(len(hand2.mean_cards)==5)   
             if hand1 < hand2:
                 self.assertLessEqual(hand1.hand, hand2.hand)
             elif hand1 > hand2:
@@ -54,15 +60,19 @@ class PokerHandTest(unittest.TestCase):
     
     def testPokerHandStraight(self):
         hand1 = get_PokerHand_from_list([1, 5, 9, 14, 18])
+        self.assertTrue(len(hand1.mean_cards) == 5)
         self.assertEqual(hand1.hand, Hand.STRAIGHT)
         
         hand1 = get_PokerHand_from_list([5, 9, 14, 18, 20])
+        self.assertTrue(len(hand1.mean_cards) == 5)
         self.assertEqual(hand1.hand, Hand.STRAIGHT)
         
         hand1 = get_PokerHand_from_list([1, 50, 47, 43, 36])
+        self.assertTrue(len(hand1.mean_cards) == 5)
         self.assertEqual(hand1.hand, Hand.STRAIGHT)
         
         hand1 = get_PokerHand_from_list([1, 50, 47, 48, 43, 36])
+        self.assertTrue(len(hand1.mean_cards) == 5)
         self.assertEqual(hand1.hand, Hand.STRAIGHT)
     
     def testPokerHandFlush(self):

@@ -267,6 +267,7 @@ class PokerHand():
             mean_cards = []
             seq = 1
             last_kind = cards[-1].kind
+            has_ace = last_kind == 14
             for _index in range(len(cards)-2,-1,-1):                
                 kind = cards[_index].kind
                 if last_kind - kind == 1:
@@ -286,6 +287,21 @@ class PokerHand():
                         k+=1
                         prev_kind = kind2
                     break
+                if seq == 4:
+                    if has_ace and (kind == 2):                    
+                        mean_cards.insert(0, cards[-1])
+                        mean_cards.insert(0,cards[_index])
+                        k = _index+1
+                        count_forward = 3
+                        prev_kind = kind
+                        while count_forward >0:
+                            kind2 = cards[k].kind
+                            if kind2 - prev_kind == 1:                            
+                                mean_cards.insert(0,cards[k])
+                                count_forward -=1
+                            k+=1
+                            prev_kind = kind2
+                        break
                 last_kind = kind
                                 
         if hand == FLUSH:

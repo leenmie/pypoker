@@ -26,7 +26,7 @@ class PokerCard():
         return (number_value, suit_value)
         
     def __repr__(self):
-        _kind = [str(i) for i in range(1, 11)] + ['J', 'Q', 'K', 'A']
+        _kind = [str(i) for i in range(0, 11)] + ['J', 'Q', 'K', 'A']
         _suit = ['()', '<>', '*', '&']
         result = _kind[self.kind] + _suit[self.suit]
         return result
